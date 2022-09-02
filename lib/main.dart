@@ -9,6 +9,8 @@ import 'page/dashboard_page.dart';
 import 'page/launcher_page.dart';
 import 'page/login_page.dart';
 import 'page/new_product_page.dart';
+import 'page/order_details_page.dart';
+import 'page/order_list_page.dart';
 import 'page/order_page.dart';
 import 'page/product_details_page.dart';
 import 'page/product_page.dart';
@@ -17,6 +19,7 @@ import 'page/settings_page.dart';
 import 'page/user_page.dart';
 import 'providers/order_provider.dart';
 import 'providers/product_provider.dart';
+import 'providers/user_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,6 +28,7 @@ void main() async {
     providers: [
       ChangeNotifierProvider(create: (context) => ProductProvider()),
       ChangeNotifierProvider(create: (context) => OrderProvider()),
+      ChangeNotifierProvider(create: (context) => UserProvider()),
     ],
     child: const MyApp(),
   ));
@@ -52,9 +56,12 @@ class MyApp extends StatelessWidget {
         ProductDetailsPage.routeName: (_) => ProductDetailsPage(),
         CategoryPage.routeName: (_) => const CategoryPage(),
         OrderPage.routeName: (_) => const OrderPage(),
+        OrderListPage.routeName: (_) => const OrderListPage(),
+        OrderDetailsPage.routeName: (_) => OrderDetailsPage(),
         UserPage.routeName: (_) => const UserPage(),
         SettingsPage.routeName: (_) => const SettingsPage(),
         ReportPage.routeName: (_) => const ReportPage(),
+
       },
     );
   }

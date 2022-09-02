@@ -1,5 +1,6 @@
 
 
+import 'package:admin_e_com/providers/order_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/dashboard_item.dart';
@@ -20,6 +21,7 @@ class DashboardPage extends StatelessWidget {
   Widget build(BuildContext context) {
     Provider.of<ProductProvider>(context, listen: false).getAllCategories();
     Provider.of<ProductProvider>(context, listen: false).getAllProducts();
+    Provider.of<OrderProvider>(context, listen: false).getAllOrders();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),

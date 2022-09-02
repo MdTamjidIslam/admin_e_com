@@ -1,15 +1,14 @@
 import 'dart:io';
 
-import 'package:admin_e_com/db/dbhelper.dart';
-import 'package:admin_e_com/models/category_model.dart';
-import 'package:admin_e_com/models/purchase_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../db/dbhelper.dart';
+import '../models/category_model.dart';
 import '../models/product_model.dart';
+import '../models/purchase_model.dart';
 
 class ProductProvider extends ChangeNotifier {
   List<ProductModel> productList = [];
@@ -23,6 +22,7 @@ class ProductProvider extends ChangeNotifier {
       notifyListeners();
     });
   }
+
   getAllProducts() {
     DbHelper.getAllProducts().listen((snapshot) {
       productList = List.generate(snapshot.docs.length, (index) =>
@@ -40,7 +40,7 @@ class ProductProvider extends ChangeNotifier {
   }
 
   Stream<DocumentSnapshot<Map<String, dynamic>>> getProductById(String id) =>
-    DbHelper.getProductById(id);
+      DbHelper.getProductById(id);
 
   Future<void> addCategory(String category) {
     final categoryModel = CategoryModel(
@@ -49,10 +49,11 @@ class ProductProvider extends ChangeNotifier {
     return DbHelper.addCategory(categoryModel);
   }
 
-  Future<void> addNewPurchase(PurchaseModel purchaseModel, String category) {
+  Future<void> addNewPurchase(PurchaseModel purchaseModel, String category, num stock) {
     final catModel = getCategoryByName(category);
     catModel.productCount += purchaseModel.quantity;
-    return DbHelper.addNewPurchase(purchaseModel, catModel);
+    final newStock = stock + purchaseModel.quantity;
+    return DbHelper.addNewPurchase(purchaseModel, catModel, newStock);
   }
 
 
@@ -67,7 +68,7 @@ class ProductProvider extends ChangeNotifier {
   }
 
   Future<void> updateProduct(String id, String field, dynamic value) =>
-    DbHelper.updateProduct(id, {field : value});
+      DbHelper.updateProduct(id, {field : value});
 
   Future<String> updateImage(XFile xFile) async {
     final imageName = DateTime.now().millisecondsSinceEpoch.toString();

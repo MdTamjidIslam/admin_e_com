@@ -1,100 +1,103 @@
-import 'package:admin_e_com/models/purchase_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/cart_model.dart';
 import '../models/date_model.dart';
+import '../models/order_model.dart';
 import '../models/product_model.dart';
+import '../models/purchase_model.dart';
+import '../providers/order_provider.dart';
 import '../providers/product_provider.dart';
 import '../utils/constants.dart';
 import '../utils/helper_functions.dart';
 
-class ProductDetailsPage extends StatelessWidget {
-  static const String routeName = '/product_details';
+class OrderDetailsPage extends StatelessWidget {
+  static const String routeName = '/order_details';
   ValueNotifier<DateTime> dateChangeNotifier = ValueNotifier(DateTime.now());
 
-  ProductDetailsPage({Key? key}) : super(key: key);
+  OrderDetailsPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     dateChangeNotifier.value = DateTime.now();
-    final pid = ModalRoute.of(context)!.settings.arguments as String;
-    final provider = Provider.of<ProductProvider>(context, listen: false);
+    final order = ModalRoute.of(context)!.settings.arguments as OrderModel;
+    final provider = Provider.of<OrderProvider>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Details'),
       ),
-      body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-        stream: provider.getProductById(pid),
+      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: provider.getAllOrdersByOrderId(order.orderId!),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            final product = ProductModel.fromMap(snapshot.data!.data()!);
-            provider.getAllPurchaseByProductId(pid);
+            final detailsList = List.generate(snapshot.data!.docs.length, (index) => CartModel.fromMap(snapshot.data!.docs[index].data()));
             return ListView(
+              padding: const EdgeInsets.all(16),
               children: [
-                FadeInImage.assetNetwork(
-                  placeholder: 'images/loading.gif',
-                  image: product.imageUrl!,
-                  fadeInDuration: const Duration(seconds: 2),
-                  fadeInCurve: Curves.bounceInOut,
-                  height: 300,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
+                Text('Product Info', style: Theme.of(context).textTheme.headline6,),
+                const SizedBox(height: 10,),
+                Card(
+                  elevation: 5,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: detailsList.map((cartM) =>
+                        ListTile(
+                          title: Text(cartM.productName!),
+                          trailing: Text('${cartM.quantity}x$currencySymbol${cartM.salePrice}'),
+                        )).toList(),
+                  ),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        _showRePurchaseForm(context, provider, product);
-                      },
-                      child: const Text('Re-Purchase'),
-                    ),
-                    TextButton(
-                      onPressed: () {
+                const SizedBox(height: 10,),
+                Text('Delivery Address', style: Theme.of(context).textTheme.headline6,),
+                const SizedBox(height: 10,),
+                Text('${order.deliveryAddress.streetAddress}\n'
+                    '${order.deliveryAddress.area}, ${order.deliveryAddress.city}\n'
+                    '${order.deliveryAddress.zipCode}', style: Theme.of(context).textTheme.headline6,),
+                const SizedBox(height: 10,),
+                Text('Payment Info', style: Theme.of(context).textTheme.headline6,),
+                const SizedBox(height: 10,),
+                Card(
+                  elevation: 5,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Delivery Charge'),
+                            Text('$currencySymbol${order.deliveryCharge}'),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Discount'),
+                            Text('${order.discount}%'),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('VAT'),
+                            Text('${order.vat}%'),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Grand Total', style: Theme.of(context).textTheme.headline6),
+                            Text('$currencySymbol${order.grandTotal}', style: Theme.of(context).textTheme.headline6),
+                          ],
+                        ),
 
-                        _showPurchaseHistory(context, provider);
-                      },
-                      child: const Text('Purchase History'),
+                      ],
                     ),
-                  ],
-                ),
-                ListTile(
-                  title: Text(product.name!),
-                  trailing: IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.edit),
                   ),
                 ),
-                ListTile(
-                  title: Text('$currencySymbol${product.salesPrice}'),
-                  trailing: IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.edit),
-                  ),
-                ),
-                ListTile(
-                  title: const Text('Product Description'),
-                  subtitle: Text(product.description ?? 'Not Available'),
-                  trailing: IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.edit),
-                  ),
-                ),
-                SwitchListTile(
-                  title: const Text('Available'),
-                  value: product.available,
-                  onChanged: (value) {
-                    provider.updateProduct(pid, productAvailable, value);
-                  },
-                ),
-                SwitchListTile(
-                  title: const Text('Featured'),
-                  value: product.featured,
-                  onChanged: (value) {
-                    provider.updateProduct(pid, productFeatured, value);
-                  },
-                ),
+                const SizedBox(height: 10,),
               ],
             );
           }
